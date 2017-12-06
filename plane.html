@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload="startGame()">
+<div style="display: none;">
+    <img id="asset_plane_fly_1" src="png/Plane/fly_1.png" />
+</div>
+<style type="text/css" media="screen">
+canvas { background:url(png/BG.png) }
+</style>
+<script>
+
+var gameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 800;
+        this.canvas.height = 600;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
+var keyPressed=new Array();
+
+var player = new Object();
+player.x = 20;
+player.y = 70;
+player.angle = 0;
+player.speed = 1;
+
+var assetList = [
+    ["png/Plane/fly_1.png", "asset_plane_fly_1"],
+    ["png/Plane/fly_2.png", "asset_plane_fly_2"],
+]
+
+var assets = new Object();
+
+function loadAssets(callback) {
+    for ( i = 0; i < assetList.length; ++i ) {
+        // create the image, onload, create the canvas
+        var img = new Image();
+        img.newName = assetList[i][1];
+        img.onload = function() {
+            // create the canvas
+            var tmp = document.createElement("canvas");
+            // resize the canvas
+            tmp.height = this.height;
+            tmp.width = this.width;
+            // draw the canvas
+            tmp.getContext("2d").drawImage(this,0,0);
+            // store it in the asset collection
+            assets[this.newName] = tmp;
+            // let the outside world know
+            if ( callback ) callback();
+        }
+        // do the load
+        img.src = assetList[i][0];
+    }
+}
+
+
+function startGame()
+{
+    loadAssets();
+
+    var interval=setInterval(updateGameArea, 5);
+    gameArea.start();
+}
+
+var booleanOne = true;
+
+function updateGameArea()
+{
+    processInput();
+        
+    gameArea.clear()
+    if ( booleanOne ) {
+        gameArea.context.drawImage(assets.asset_plane_fly_1,player.x,player.y);
+        console.log("1");
+    }
+    else {
+        gameArea.context.drawImage(assets.asset_plane_fly_2,player.x,player.y);
+        console.log("2");
+    }
+    booleanOne = !booleanOne;
+
+}
+
+function left() {
+  player.x -= player.speed;
+};
+function right() {
+  player.x += player.speed;
+};
+function up() {
+  player.y -= player.speed;
+};
+
+function down() {
+  player.y += player.speed;
+};
+
+
+window.addEventListener('keydown', function(event) {
+    keyPressed[event.keyCode] = true;
+});
+window.addEventListener('keyup', function(event) {
+    keyPressed[event.keyCode] = false;
+});
+
+function processInput() {
+  // case 37: // Left
+  // case 65: // A
+  if ( keyPressed[37] ||  keyPressed[65] )
+      left();
+
+  // case 38: // Up
+  // case 87: // W
+  if ( keyPressed[38] ||  keyPressed[87] )
+      up();
+
+  // case 39: // Right
+  // case 68: // D
+  if ( keyPressed[39] ||  keyPressed[68] )
+      right();
+
+  // case 40: // Down
+  // case 72: // S
+  if ( keyPressed[40] ||  keyPressed[72] )
+      down();
+}
+
+</script>
+<br>
+</body>
+</html>
