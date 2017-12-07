@@ -53,9 +53,10 @@ var plane = {
     ],
 
     initialize : function(callback) {
-        this.animationTick = 1;    
-        this.animation = "fly";
-        this.assets = loadAssets(this.assetList, function (err) {
+        this._animationTick = 1;    
+        this._animation = "fly";
+        this._scale = 1;
+        this._assets = loadAssets(this.assetList, function (err) {
             if (err) alert("Error: " + err);
             if ( callback ) callback();
         })
@@ -63,29 +64,33 @@ var plane = {
 
     tick : function() {
         // increment the animation tick
-        this.animationTick = this.animationTick + 1;
+        this._animationTick = this._animationTick + 1;
 
         // if this does not exist, reset the tick, and the frame
-        this.frame = this.animation + this.animationTick;
-        if ( this.frame in this.assets == false) {
-            this.animationTick = 1; 
-            this.animation = "fly";  
-            this.frame = "fly1"; // revert to default animation
+        this._frame = this._animation + this._animationTick;
+        if ( this._frame in this._assets == false) {
+            this._animationTick = 1; 
+            this._animation = "fly";  
+            this._frame = "fly1"; // revert to default animation
         }
 
     },
     draw : function() {
-        gameArea.context.drawImage(this.assets[this.frame],player.x,player.y);
+        var pic = this._assets[this._frame];
+        gameArea.context.drawImage(pic,player.x,player.y,pic.width*this._scale, pic.height*this._scale);
     },
     fire : function() {
-        this.animation = "shoot";
-    }
+        this._animation = "shoot";
+    },
+    scale : function(percentage) {
+        this._scale = percentage;
+    },
 }
 
 function loadAssets(assetList, callback) {
     var numberToLoad = assetList.length;
-    var numberLoaded = 0;
-    var err = null;
+    var numberLoaded = 0
+;    var err = null;
     var returnAssets = new Object();
     for ( i = 0; i < numberToLoad; ++i ) {
         // create the image, onload, create the canvas
@@ -100,6 +105,8 @@ function loadAssets(assetList, callback) {
             tmp.width = this.width;
             // draw the canvas
             tmp.getContext("2d").drawImage(this,0,0);
+            // save the original state of the asset
+            tmp.getContext("2d").save();
             // store it in the asset collection
             returnAssets[this.newName] = tmp;
             // increment the number loaded
@@ -188,13 +195,17 @@ function processInput() {
       right();
 
   // case 40: // Down
-  // case 72: // S
-  if ( keyPressed[40] ||  keyPressed[72] )
+  // case 83: // S
+  if ( keyPressed[40] ||  keyPressed[83] )
       down();
 
-  // case 32: // Space Bar
+  // Space Bar
   if ( keyPressed[32] )
       fire();
+
+  // Z
+  if ( keyPressed[90] )
+      plane.scale(Math.random());
 
 }
 
