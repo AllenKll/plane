@@ -38,20 +38,60 @@ var player = new Object();
 player.x = 20;
 player.y = 70;
 player.angle = 0;
-player.speed = 1;
+player.speed = 5;
 
-var assetList = [
-    ["png/Plane/fly_1.png", "asset_plane_fly_1"],
-    ["png/Plane/fly_2.png", "asset_plane_fly_2"],
-]
 
-var assets = new Object();
+var plane = {
+    assetList : [
+        ["png/Plane/fly_1.png", "fly1"],
+        ["png/Plane/fly_2.png", "fly2"],
+        ["png/Plane/Shoot_1.png", "shoot1"],
+        ["png/Plane/Shoot_2.png", "shoot2"],
+        ["png/Plane/Shoot_3.png", "shoot3"],
+        ["png/Plane/Shoot_4.png", "shoot4"],
+        ["png/Plane/Shoot_5.png", "shoot5"],
+    ],
 
-function loadAssets(callback) {
-    for ( i = 0; i < assetList.length; ++i ) {
+    initialize : function(callback) {
+        this.animationTick = 1;    
+        this.animation = "fly";
+        this.assets = loadAssets(this.assetList, function (err) {
+            if (err) alert("Error: " + err);
+            if ( callback ) callback();
+        })
+    },
+
+    tick : function() {
+        // increment the animation tick
+        this.animationTick = this.animationTick + 1;
+
+        // if this does not exist, reset the tick, and the frame
+        this.frame = this.animation + this.animationTick;
+        if ( this.frame in this.assets == false) {
+            this.animationTick = 1; 
+            this.animation = "fly";  
+            this.frame = "fly1"; // revert to default animation
+        }
+
+    },
+    draw : function() {
+        gameArea.context.drawImage(this.assets[this.frame],player.x,player.y);
+    },
+    fire : function() {
+        this.animation = "shoot";
+    }
+}
+
+function loadAssets(assetList, callback) {
+    var numberToLoad = assetList.length;
+    var numberLoaded = 0;
+    var err = null;
+    var returnAssets = new Object();
+    for ( i = 0; i < numberToLoad; ++i ) {
         // create the image, onload, create the canvas
         var img = new Image();
         img.newName = assetList[i][1];
+        img.lastAsset =  i  == assetList - 1;
         img.onload = function() {
             // create the canvas
             var tmp = document.createElement("canvas");
@@ -61,41 +101,48 @@ function loadAssets(callback) {
             // draw the canvas
             tmp.getContext("2d").drawImage(this,0,0);
             // store it in the asset collection
-            assets[this.newName] = tmp;
-            // let the outside world know
-            if ( callback ) callback();
+            returnAssets[this.newName] = tmp;
+            // increment the number loaded
+            ++numberLoaded;
+            // if all have loaded, let the outside world know
+            if ( callback && numberLoaded == numberToLoad ) callback(err);
         }
+        img.onError = function() { 
+            err = "Error loading assets";
+            ++numberLoaded;
+        }
+        img.onTimeout = function() { 
+            err = "Timeout loading assets";
+            ++numberLoaded;
+        }
+
         // do the load
         img.src = assetList[i][0];
     }
+    // this will be unusable until the callback triggers
+    return returnAssets;
+
 }
 
 
 function startGame()
 {
-    loadAssets();
-
-    var interval=setInterval(updateGameArea, 5);
     gameArea.start();
-}
 
-var booleanOne = true;
+    plane.initialize( function() {
+        // done loading, setup trigger the game loop
+        setInterval(updateGameArea, 20);
+    })
+}
 
 function updateGameArea()
 {
     processInput();
         
     gameArea.clear()
-    if ( booleanOne ) {
-        gameArea.context.drawImage(assets.asset_plane_fly_1,player.x,player.y);
-        console.log("1");
-    }
-    else {
-        gameArea.context.drawImage(assets.asset_plane_fly_2,player.x,player.y);
-        console.log("2");
-    }
-    booleanOne = !booleanOne;
 
+    plane.tick();
+    plane.draw();
 }
 
 function left() {
@@ -110,6 +157,10 @@ function up() {
 
 function down() {
   player.y += player.speed;
+};
+
+function fire() {
+  plane.fire();
 };
 
 
@@ -140,6 +191,11 @@ function processInput() {
   // case 72: // S
   if ( keyPressed[40] ||  keyPressed[72] )
       down();
+
+  // case 32: // Space Bar
+  if ( keyPressed[32] )
+      fire();
+
 }
 
 </script>
