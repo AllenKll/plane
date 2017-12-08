@@ -7,5 +7,7 @@ This project was built to learn about:
 3. Loading assets
 
 THe plane flies about with the arrow keys or asdf.
+
 Z randomly resizes the plane
+
 space activates the fire animation
